@@ -219,18 +219,90 @@ export default function abbr_plugin (md, md2, options) {
               state.tokens.push(token_t3);
               
               if (detailedTranslation) {
+                  if ("genders" in detailedTranslation) {
+                    const token_tip1o = new state.Token("div_open", "div", 1);
+                    token_tip1o.attrs = [ [ "class", `translation-gender` ] ];
+                    state.tokens.push(token_tip1o);
+                    
+                    let genderCount = 0;
+                    let articleCount = 0;
+                    
+                    detailedTranslation.genders.forEach(genderRecord=>{
+                      const genderSeperator = (genderCount>0) ? ' or ' : '';
+                      genderCount++;
+                      if ("gender" in genderRecord && "articles" in genderRecord) {
+                        const gender = genderRecord.gender;
+                        const articles = genderRecord.articles;
+                        
+                        {
+                          state.tokens.push(new state.Token("span_open", "span", 1));
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `${genderSeperator}${gender}`;
+                          state.tokens.push(token_t2);
+                          state.tokens.push(new state.Token("span_close", "span", -1));
+                        }
+                        let articleStart = ' (';
+                        if ("s" in articles) {
+                          articleCount++;
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `${articleStart}${articles.s.a}`;
+                          articleStart = ', '
+                          state.tokens.push(token_t2);
+                        }
+                        if ("p" in articles) {
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `${articleStart}${articles.p.a}`;
+                          state.tokens.push(token_t2);
+                        }
+
+
+                        {
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `)`;
+                          state.tokens.push(token_t2);
+                        }
+                      }
+                    });
+
+                    state.tokens.push(new state.Token("br", "br", 0));
+                    genderCount = 0;
+                    detailedTranslation.genders.forEach(genderRecord=>{
+
+                      if ("gender" in genderRecord && "articles" in genderRecord) {
+                        const gender = genderRecord.gender;
+                        const articles = genderRecord.articles;
+                        const genderSeparator = (genderCount>0) ? ', ' : '';
+                        let articleSeparator = (articleCount >0) ? ', ' : '';
+                        if ("s" in articles) {
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `${genderSeparator}${articles.s.e}`;
+                          state.tokens.push(token_t2);
+                        }
+                        if ("p" in articles) {
+                          let articleSeparator = (articleCount >0) ? ', ' : '';
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = `${articleSeparator}${articles.p.e}`;
+                          state.tokens.push(token_t2);
+                        }
+                      }
+                      genderCount++;
+                    });
+                    
+                    const token_tip1c = new state.Token("div_close", "div", -1);
+                    state.tokens.push(token_tip1c);
+
+                  }
+                      
                   if ("tip" in detailedTranslation) {
-                      state.tokens.push(new state.Token("br","br",0));
-                      const token_tip1o = new state.Token("span_open", "span", 1);
+                      const token_tip1o = new state.Token("div_open", "div", 1);
                       token_tip1o.attrs = [ [ "class", "translation-tip" ]];
                       state.tokens.push(token_tip1o);
                       const token_t2 = new state.Token("text", "", 0);
                       token_t2.content = detailedTranslation.tip;
                       state.tokens.push(token_t2);
-                      const token_tip1c = new state.Token("span_close", "span", -1);
-                      state.tokens.push(token_tip1c);
-                    
+                      state.tokens.push(new state.Token("div_close", "div", -1));
                   }
+                  
                   if ("example" in detailedTranslation) {
                       const token_tip1o = new state.Token("fieldset_open", "fieldset", 1);
                       token_tip1o.attrs = [ [ "class", "translation-example" ]];
