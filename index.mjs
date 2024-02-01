@@ -65,7 +65,11 @@ export default function abbr_plugin (md, md2, options) {
   }
 
   function abbr_replace (state) {
-    const blockTokens = state.tokens
+    const blockTokens = state.tokens;
+    
+    if (!state.env.translation_dialogs) {
+      state.env.translation_dialogs = [];
+    }
 
     if (!state.env.abbreviations) { return }
 
@@ -119,15 +123,12 @@ export default function abbr_plugin (md, md2, options) {
           const randomId = crypto.randomBytes(8).toString('hex');
           const translation = state.env.abbreviations[":" + m[2]];
 
-          const wrapper_o = new state.Token('span_open', 'span', 1);
-          wrapper_o.attrs =[ ['class', configuration.className], ];
-          nodes.push(wrapper_o);
+
           
             const token_o = new state.Token('link_open', 'a', 1)
             token_o.attrs = [
                 ['data-translation', translation ],
-                ['onclick',`${configuration.childRevealFunction}("${randomId}")`],
-                ['onhover',configuration.childRevealFunction],
+                ['onclick',`${configuration.childRevealFunction}('${randomId}')`],
                 ['data-dialog-id',randomId],
             ];
             nodes.push(token_o);
@@ -138,43 +139,18 @@ export default function abbr_plugin (md, md2, options) {
     
             const token_c = new state.Token('link_close', 'a', -1)
             nodes.push(token_c)
-
-            const token_do = new state.Token('dialog_open','dialog',1)
-            token_do.attrs = [
-              ['id',randomId],
-              ['onclick',`${configuration.childCloseFunction}("${randomId}")`]
-            ];
-            nodes.push(token_do);
-
-              const token_h1o = new state.Token('h1_open','h1',1);
-              nodes.push(token_h1o);
-                const token_t2 = new state.Token('text', '', 0);
-                token_t2.content = 'Spanish Translation';
-                nodes.push(token_t2);
-              const token_h1c = new state.Token('h1_close','h1',-1);
-              nodes.push(token_h1c)
-
-              const token_dfno = new state.Token('dfn_open','dfn',1);
-              nodes.push(token_dfno);
-                const token_t5 = new state.Token('text', '', 0);
-                token_t5.content = m[2];
-                nodes.push(token_t5);
-              const token_dfnc = new state.Token('dfn_close','dfn',-1);
-              nodes.push(token_dfnc)
-
-
-              const token_t3 = new state.Token('text', '', 0);
-              token_t3.content = translation;
-              nodes.push(token_t3);
           
-            const token_dc = new state.Token('dialog_close','dialog',-1);
-            nodes.push(token_dc);
-          
-          const wrapper_c = new state.Token('span_close','span',-1);
-          nodes.push(wrapper_c);
+
 
           reg.lastIndex -= m[3].length
           pos = reg.lastIndex
+          
+          state.env.translation_dialogs.push({
+              id:randomId,
+              untranslated:m[2],
+              translation:translation,
+          });
+  
         }
 
         if (!nodes.length) { continue }
@@ -190,8 +166,57 @@ export default function abbr_plugin (md, md2, options) {
       }
     }
   }
+  
+      function add_dialogs(state) {
+      if (state.env.translation_dialogs) {
+          const wrapper_o = new state.Token('span_open', 'span', 1);
+          wrapper_o.attrs =[ ['class', configuration.className], ];
+          state.tokens.push(wrapper_o);
+          
+        state.env.translation_dialogs.forEach(dialog=>{
+          console.error("$$##",dialog)
+            const token_do = new state.Token('dialog_open','dialog',1);
+            token_do.attrs = [
+              ['id',dialog.id],
+              ['onclick',`${configuration.childCloseFunction}('${dialog.id}')`]
+            ];
+            state.tokens.push(token_do);
+
+              const token_h1o = new state.Token('h1_open','h1',1);
+              state.tokens.push(token_h1o);
+                const token_t2 = new state.Token('text', '', 0);
+                token_t2.content = 'Spanish Translation';
+                state.tokens.push(token_t2);
+              const token_h1c = new state.Token('h1_close','h1',-1);
+              state.tokens.push(token_h1c)
+
+              const token_dfno = new state.Token('dfn_open','dfn',1);
+              state.tokens.push(token_dfno);
+                const token_t5 = new state.Token('text', '', 0);
+                token_t5.content = dialog.untranslated;
+                state.tokens.push(token_t5);
+              const token_dfnc = new state.Token('dfn_close','dfn',-1);
+              state.tokens.push(token_dfnc)
+
+
+              const token_t3 = new state.Token('text', '', 0);
+              token_t3.content = dialog.translation;
+              state.tokens.push(token_t3);
+          
+            const token_dc = new state.Token('dialog_close','dialog',-1);
+            state.tokens.push(token_dc);
+ 
+        });
+        
+        const wrapper_c = new state.Token('span_close','span',-1);
+        state.tokens.push(wrapper_c);
+          
+        state.env.translation_dialogs = [];
+      }
+    }
 
   md.block.ruler.before('reference', 'abbr_def', abbr_def, { alt: ['paragraph', 'reference'] })
 
   md.core.ruler.after('linkify', 'abbr_replace', abbr_replace)
+  md.core.ruler.after('abbr_replace','add_dialogs', add_dialogs)
 };
