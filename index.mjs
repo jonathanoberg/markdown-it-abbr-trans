@@ -1,6 +1,14 @@
+const crypto = require('crypto');
+            
+ 
 // Enclose abbreviations in <abbr> tags
 //
-export default function abbr_plugin (md) {
+export default function abbr_plugin (md, md2, options) {
+  const configuration = {
+    className: 'translation-tooltip',
+    childRevealFunction: 'someClickFunction',
+    childCloseFunction: 'hideme',
+  }
   const escapeRE        = md.utils.escapeRE
   const arrayReplaceAt  = md.utils.arrayReplaceAt
 
@@ -108,16 +116,62 @@ export default function abbr_plugin (md) {
             nodes.push(token)
           }
 
-          const token_o = new state.Token('abbr_open', 'abbr', 1)
-          token_o.attrs = [['title', state.env.abbreviations[':' + m[2]]]]
-          nodes.push(token_o)
+          const randomId = crypto.randomBytes(8).toString('hex');
+          const translation = state.env.abbreviations[":" + m[2]];
 
-          const token_t = new state.Token('text', '', 0)
-          token_t.content = m[2]
-          nodes.push(token_t)
+          const wrapper_o = new state.Token('span_open', 'span', 1);
+          wrapper_o.attrs =[ ['class', configuration.className], ];
+          nodes.push(wrapper_o);
+          
+            const token_o = new state.Token('link_open', 'a', 1)
+            token_o.attrs = [
+                ['data-translation', translation ],
+                ['onclick',`${configuration.childRevealFunction}("${randomId}")`],
+                ['onhover',configuration.childRevealFunction],
+                ['data-dialog-id',randomId],
+            ];
+            nodes.push(token_o);
 
-          const token_c = new state.Token('abbr_close', 'abbr', -1)
-          nodes.push(token_c)
+              const token_t = new state.Token('text', '', 0)
+              token_t.content = m[2]
+              nodes.push(token_t)
+    
+            const token_c = new state.Token('link_close', 'a', -1)
+            nodes.push(token_c)
+
+            const token_do = new state.Token('dialog_open','dialog',1)
+            token_do.attrs = [
+              ['id',randomId],
+              ['onclick',`${configuration.childCloseFunction}("${randomId}")`]
+            ];
+            nodes.push(token_do);
+
+              const token_h1o = new state.Token('h1_open','h1',1);
+              nodes.push(token_h1o);
+                const token_t2 = new state.Token('text', '', 0);
+                token_t2.content = 'Spanish Translation';
+                nodes.push(token_t2);
+              const token_h1c = new state.Token('h1_close','h1',-1);
+              nodes.push(token_h1c)
+
+              const token_dfno = new state.Token('dfn_open','dfn',1);
+              nodes.push(token_dfno);
+                const token_t5 = new state.Token('text', '', 0);
+                token_t5.content = m[2];
+                nodes.push(token_t5);
+              const token_dfnc = new state.Token('dfn_close','dfn',-1);
+              nodes.push(token_dfnc)
+
+
+              const token_t3 = new state.Token('text', '', 0);
+              token_t3.content = translation;
+              nodes.push(token_t3);
+          
+            const token_dc = new state.Token('dialog_close','dialog',-1);
+            nodes.push(token_dc);
+          
+          const wrapper_c = new state.Token('span_close','span',-1);
+          nodes.push(wrapper_c);
 
           reg.lastIndex -= m[3].length
           pos = reg.lastIndex

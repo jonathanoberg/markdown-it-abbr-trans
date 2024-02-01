@@ -1,5 +1,5 @@
 {
-  "name": "markdown-it-abbr",
+  "name": "markdown-it-abbr-trans",
   "version": "2.0.0",
   "description": "<abbr> tag for markdown-it markdown parser.",
   "keywords": [
