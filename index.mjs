@@ -52,6 +52,7 @@ export default function abbr_plugin (md, md2, options) {
 
     const label = state.src.slice(labelStart, labelEnd).replace(/\\(.)/g, '$1')
     const title = state.src.slice(labelEnd + 2, max).trim()
+
     if (label.length === 0) { return false }
     if (title.length === 0) { return false }
     if (!state.env.abbreviations) { state.env.abbreviations = {} }
@@ -174,14 +175,28 @@ export default function abbr_plugin (md, md2, options) {
           state.tokens.push(wrapper_o);
           
         state.env.translation_dialogs.forEach(dialog=>{
-          console.error("$$##",dialog)
+            
             const token_do = new state.Token('dialog_open','dialog',1);
             token_do.attrs = [
               ['id',dialog.id],
               ['onclick',`${configuration.childCloseFunction}('${dialog.id}')`]
             ];
             state.tokens.push(token_do);
-
+            
+            let translatedText;
+            let detailedTranslation;
+            if (dialog.translation[0] === '{') {
+              try {
+                const trans = JSON.parse(dialog.translation);
+                translatedText = trans.literal;
+                detailedTranslation = trans;
+              } catch (err) {
+                translatedText = dialog.translation;
+              }
+            } else {
+              translatedText = dialog.translation;
+            }
+            
               const token_h1o = new state.Token('h1_open','h1',1);
               state.tokens.push(token_h1o);
                 const token_t2 = new state.Token('text', '', 0);
@@ -200,8 +215,43 @@ export default function abbr_plugin (md, md2, options) {
 
 
               const token_t3 = new state.Token('text', '', 0);
-              token_t3.content = dialog.translation;
+              token_t3.content = translatedText;
               state.tokens.push(token_t3);
+              
+              if (detailedTranslation) {
+                  if ("tip" in detailedTranslation) {
+                      state.tokens.push(new state.Token("br","br",0));
+                      const token_tip1o = new state.Token("span_open", "span", 1);
+                      token_tip1o.attrs = [ [ "class", "translation-tip" ]];
+                      state.tokens.push(token_tip1o);
+                      const token_t2 = new state.Token("text", "", 0);
+                      token_t2.content = detailedTranslation.tip;
+                      state.tokens.push(token_t2);
+                      const token_tip1c = new state.Token("span_close", "span", -1);
+                      state.tokens.push(token_tip1c);
+                    
+                  }
+                  if ("example" in detailedTranslation) {
+                      const token_tip1o = new state.Token("fieldset_open", "fieldset", 1);
+                      token_tip1o.attrs = [ [ "class", "translation-example" ]];
+                      state.tokens.push(token_tip1o);
+                      state.tokens.push(new state.Token("legend_open","legend",1));
+                      {
+                          const token_t2 = new state.Token("text", "", 0);
+                          token_t2.content = "Example"
+                          state.tokens.push(token_t2);
+    
+                      }
+                      state.tokens.push(new state.Token("legend_close","legend",-1));
+                      const token_t2 = new state.Token("text", "", 0);
+                      token_t2.content = detailedTranslation.example;
+                      state.tokens.push(token_t2);
+                      const token_tip1c = new state.Token("fieldset_close", "fieldset", -1);
+                      state.tokens.push(token_tip1c);
+                    
+                  }              
+              }
+              
           
             const token_dc = new state.Token('dialog_close','dialog',-1);
             state.tokens.push(token_dc);
