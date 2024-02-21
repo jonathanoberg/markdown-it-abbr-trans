@@ -128,6 +128,7 @@ export default function abbr_plugin (md, md2, options) {
           
             const token_o = new state.Token('link_open', 'a', 1)
             token_o.attrs = [
+                ['class','translation-available'],
                 ['data-translation', translation ],
                 ['onclick',`${configuration.childRevealFunction}('${randomId}')`],
                 ['data-dialog-id',randomId],
