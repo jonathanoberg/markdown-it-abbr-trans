@@ -103,10 +103,10 @@ export default function abbr_plugin (md, md2, options) {
         const currentToken = tokens[i]
         if (currentToken.type !== 'text') { continue }
 
-        let pos = 0
-        const text = currentToken.content
-        reg.lastIndex = 0
-        const nodes = []
+        let pos = 0;
+        const text = currentToken.content;
+        reg.lastIndex = 0;
+        const nodes = [];
 
         // fast regexp run to determine whether there are any abbreviated words
         // in the current token
@@ -123,6 +123,7 @@ export default function abbr_plugin (md, md2, options) {
 
           const randomId = crypto.randomBytes(8).toString('hex');
           const translation = state.env.abbreviations[":" + m[2]];
+          let toBeTranslated = m[2];
 
 
           
@@ -135,12 +136,12 @@ export default function abbr_plugin (md, md2, options) {
             ];
             nodes.push(token_o);
 
-              const token_t = new state.Token('text', '', 0)
-              token_t.content = m[2]
-              nodes.push(token_t)
+              const token_t = new state.Token('text', '', 0);
+              token_t.content = toBeTranslated;
+              nodes.push(token_t);
     
-            const token_c = new state.Token('link_close', 'a', -1)
-            nodes.push(token_c)
+            const token_c = new state.Token('link_close', 'a', -1);
+            nodes.push(token_c);
           
 
 
@@ -149,7 +150,7 @@ export default function abbr_plugin (md, md2, options) {
           
           state.env.translation_dialogs.push({
               id:randomId,
-              untranslated:m[2],
+              untranslated:toBeTranslated,
               translation:translation,
           });
   
@@ -325,6 +326,33 @@ export default function abbr_plugin (md, md2, options) {
                   }              
               }
               
+              /*
+               *
+               * Add support for our audio translations...
+               * 
+               * Build this div using htmx to fill in when needed:
+                  <div    
+                    hx-post="/app/audio/definition"
+                    hx-trigger="revealed"
+                    hx-swap="innerHTML"
+                    class="definition-audio"
+                    hx-vals='{"definition": "<token being translated>"}'
+                  /></div>
+                *
+                */
+              {
+                    const token_tip1o = new state.Token("div_open", "div", 1);
+                    token_tip1o.attrs = [ 
+                        [ "hx-post", `/app/audio/definition` ],
+                        [ "hx-trigger", `intersect` ],
+                        [ "hx-swap", `innerHTML` ],
+                        [ "hx-vals", `{"definition":"${dialog.untranslated}"}` ],
+                        [ "class", `definition-audio` ],
+                      ];
+                    state.tokens.push(token_tip1o);
+                    state.tokens.push(new state.Token("div_close",'div',-1));
+
+              }
           
             const token_dc = new state.Token('dialog_close','dialog',-1);
             state.tokens.push(token_dc);
