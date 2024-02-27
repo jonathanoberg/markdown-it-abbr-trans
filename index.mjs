@@ -76,7 +76,7 @@ export default function abbr_plugin (md, md2, options) {
 
     const regSimple = new RegExp('(?:' +
       Object.keys(state.env.abbreviations).map(function (x) {
-        return x.substr(1)
+        return x.substr(1).toLowerCase();
       }).sort(function (a, b) {
         return b.length - a.length
       }).map(escapeRE).join('|') +
@@ -85,14 +85,14 @@ export default function abbr_plugin (md, md2, options) {
     const regText = '(^|' + UNICODE_PUNCT_RE + '|' + UNICODE_SPACE_RE +
                     '|[' + OTHER_CHARS.split('').map(escapeRE).join('') + '])' +
             '(' + Object.keys(state.env.abbreviations).map(function (x) {
-      return x.substr(1)
+      return x.substr(1).toLowerCase()
     }).sort(function (a, b) {
       return b.length - a.length
     }).map(escapeRE).join('|') + ')' +
             '($|' + UNICODE_PUNCT_RE + '|' + UNICODE_SPACE_RE +
                     '|[' + OTHER_CHARS.split('').map(escapeRE).join('') + '])'
 
-    const reg = new RegExp(regText, 'g')
+    const reg = new RegExp(regText, 'gi')
 
     for (let j = 0, l = blockTokens.length; j < l; j++) {
       if (blockTokens[j].type !== 'inline') { continue }
@@ -122,7 +122,7 @@ export default function abbr_plugin (md, md2, options) {
           }
 
           const randomId = crypto.randomBytes(8).toString('hex');
-          const translation = state.env.abbreviations[":" + m[2]];
+          const translation = state.env.abbreviations[":" + m[2].toLowerCase()];
           let toBeTranslated = m[2];
 
 
@@ -139,7 +139,7 @@ export default function abbr_plugin (md, md2, options) {
               const token_t = new state.Token('text', '', 0);
               token_t.content = toBeTranslated;
               nodes.push(token_t);
-    
+    console.error("#!@",toBeTranslated);
             const token_c = new state.Token('link_close', 'a', -1);
             nodes.push(token_c);
           
