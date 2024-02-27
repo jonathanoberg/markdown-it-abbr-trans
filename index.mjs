@@ -50,12 +50,13 @@ export default function abbr_plugin (md, md2, options) {
 
     if (silent) { return true }
 
-    const label = state.src.slice(labelStart, labelEnd).replace(/\\(.)/g, '$1')
+    const label = state.src.slice(labelStart, labelEnd).replace(/\\(.)/g, '$1').toLowerCase();
     const title = state.src.slice(labelEnd + 2, max).trim()
 
     if (label.length === 0) { return false }
     if (title.length === 0) { return false }
     if (!state.env.abbreviations) { state.env.abbreviations = {} }
+
     // prepend ':' to avoid conflict with Object.prototype members
     if (typeof state.env.abbreviations[':' + label] === 'undefined') {
       state.env.abbreviations[':' + label] = title
@@ -139,7 +140,7 @@ export default function abbr_plugin (md, md2, options) {
               const token_t = new state.Token('text', '', 0);
               token_t.content = toBeTranslated;
               nodes.push(token_t);
-    console.error("#!@",toBeTranslated);
+
             const token_c = new state.Token('link_close', 'a', -1);
             nodes.push(token_c);
           
